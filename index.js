@@ -401,6 +401,17 @@ app.get("/", (req, res) => {
   res.send("✅ API de SecondMind funcionando en Render");
 });
 
+app.get("/db-test", async (req, res) => {
+  try {
+    const ping = await pool.query("SELECT NOW() AS now, current_schema() AS schema");
+    res.json(ping.rows[0]);
+  } catch (e) {
+    console.error("❌ /db-test error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ API escuchando en puerto ${PORT}`);
