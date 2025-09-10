@@ -2,11 +2,17 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 
+import cors from "cors";
+import authRoutes from "./auth.js";
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/auth", authRoutes);
 
 // 🔹 Conexión a PostgreSQL (Render usa DATABASE_URL)
 const pool = new Pool({
@@ -392,7 +398,12 @@ app.delete("/documents/:id", async (req, res) => {
 /* ============================================================
    SERVER
 ============================================================ */
+// Ruta raíz para pruebas
+app.get("/", (req, res) => {
+  res.send("✅ API de SecondMind funcionando en Render");
+});
 
-app.listen(port, () => {
-  console.log(`✅ API escuchando en puerto ${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ API escuchando en puerto ${PORT}`);
 });
