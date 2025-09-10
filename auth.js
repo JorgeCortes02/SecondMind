@@ -1,7 +1,7 @@
-import express from "express";
-import jwt from "jsonwebtoken";
-import { OAuth2Client } from "google-auth-library";
-import pool from "./db.js";
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
+const pool = require("./db");
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -10,7 +10,6 @@ router.post("/google", async (req, res) => {
   const { idToken } = req.body;
 
   try {
-    // Verificar token de Google
     const ticket = await client.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -21,7 +20,6 @@ router.post("/google", async (req, res) => {
     const email = payload["email"];
     const name = payload["name"];
 
-    // Guardar/actualizar en PostgreSQL
     const result = await pool.query(
       `INSERT INTO users (google_id, email, name)
        VALUES ($1, $2, $3)
@@ -33,7 +31,6 @@ router.post("/google", async (req, res) => {
 
     const userId = result.rows[0].id;
 
-    // Generar JWT propio
     const token = jwt.sign({ userId, email }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
