@@ -25,7 +25,7 @@ const pool = new Pool({
 // Listar proyectos
 app.get("/projects", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM projects ORDER BY id DESC");
+    const result = await pool.query("SELECT * FROM projects ORDER BY id DESC;");
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
