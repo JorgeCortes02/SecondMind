@@ -23,7 +23,7 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 
-app.use("/verify", verifyMail);
+app.use("/verificationMail", verifyMail);
 
 
 /* ============================================================
