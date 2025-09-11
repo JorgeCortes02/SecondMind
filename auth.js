@@ -92,7 +92,7 @@ router.post("/register", async (req, res) => {
       },
     });
 
-    const verifyUrl = `https://tu-backend.com/auth/verify?token=${verificationToken}`;
+    const verifyUrl = `https://secondmind-h6hv.onrender.com/auth/verify?token=${verificationToken}`;
 
    
 
@@ -104,7 +104,7 @@ await transporter.sendMail({
   <body style="margin:0;padding:0;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f0f8ff, #dce6ff, #fadcf0); padding:40px;">
     <div style="max-width:500px;margin:0 auto;background:rgba(255,255,255,0.6);backdrop-filter:blur(10px);border-radius:30px;padding:30px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.15);">
       
-      <img src="https://secondmind.com/logo.png" alt="SecondMind" style="width:120px;height:auto;margin-bottom:20px;" />
+     
       
       <h1 style="font-size:28px;color:#2f81d9;margin:0 0 10px;">Second<span style="color:#4781c6;">Mind</span></h1>
       <p style="font-size:16px;color:#333;margin:0 0 20px;">Organiza. Enfócate. Avanza 🚀</p>
