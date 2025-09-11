@@ -48,7 +48,7 @@ router.post("/google", async (req, res) => {
       expiresIn: "7d",
     });
 
-    res.json({ token });
+    res.json({ token, user: { id : userId,  email: email, name: name } });
   } catch (error) {
     console.error("❌ Error auth Google:", error);
     res.status(401).json({ error: "Token inválido" });
