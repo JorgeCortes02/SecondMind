@@ -3,14 +3,28 @@ const cors = require("cors");
 
 const authRoutes = require("./auth");
 
+const { requireAuth } = require("./authMiddleware");
 const pool = require("./db");
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
+
+
+// Más adelante, si usas un frontend web, puedes limitarlo así: Habras de añadir el allowed a enviroments 
+// app.use(
+//   cors({
+//     origin: process.env.ALLOWED_ORIGIN || "*",
+//     credentials: true,
+//   })
+// );
+
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+
+
+
 
 /* ============================================================
    PROJECTS
