@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require("./db"); // 👈 importa la conexión a la DB
 
 // GET /verify?token=xxxxx
-router.get("/", async (req, res) => {
+router.get("/verify", async (req, res) => {
   const { token } = req.query;
 
   try {
