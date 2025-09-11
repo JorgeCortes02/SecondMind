@@ -1,10 +1,9 @@
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
+const express = require("express");
 const router = express.Router();
+const pool = require("./db"); // 👈 importa la conexión a la DB
 
-
-router.get("/verify", async (req, res) => {
+// GET /verify?token=xxxxx
+router.get("/", async (req, res) => {
   const { token } = req.query;
 
   try {
