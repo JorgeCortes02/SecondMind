@@ -1,0 +1,75 @@
+Crear ENUM para el estado
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_status') THEN
+      CREATE TYPE activity_status AS ENUM ('on', 'off');
+   END IF;
+END$$;
+
+-- Tabla de proyectos
+CREATE TABLE IF NOT EXISTS projects (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    end_date TIMESTAMP NULL,
+    status activity_status NOT NULL DEFAULT 'on',
+    last_opened_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    description_project TEXT
+);
+
+-- Tabla de eventos
+CREATE TABLE IF NOT EXISTS events (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    status activity_status NOT NULL DEFAULT 'on',
+    description_event TEXT,
+    project_id INT REFERENCES projects(id) ON DELETE SET NULL
+);
+
+-- Tabla de tareas
+CREATE TABLE IF NOT EXISTS task_items (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    end_date TIMESTAMP NULL,
+    complete_date TIMESTAMP NULL,
+    status activity_status NOT NULL DEFAULT 'on',
+    description_task TEXT,
+    project_id INT REFERENCES projects(id) ON DELETE SET NULL,
+    event_id INT REFERENCES events(id) ON DELETE SET NULL
+);
+
+-- Tabla de documentos
+CREATE TABLE IF NOT EXISTS uploaded_documents (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    local_url TEXT NOT NULL,
+    upload_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    event_id INT REFERENCES events(id) ON DELETE SET NULL
+);
+
+-- Tabla de notas
+CREATE TABLE IF NOT EXISTS notes (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    event_id INT REFERENCES events(id) ON DELETE SET NULL
+);
+
+-- Tabla de última tarea borrada
+CREATE TABLE IF NOT EXISTS last_delete_task (
+    id SERIAL PRIMARY KEY,
+    date TIMESTAMP NULL
+);
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    google_id TEXT UNIQUE,                -- si el login es por Google
+    email TEXT UNIQUE NOT NULL,           -- email único
+    name TEXT,                            -- nombre visible
+    avatar TEXT,                          -- opcional, URL de foto
+    password_hash TEXT,                   -- hash de la contraseña si es registro propio
+    is_verified BOOLEAN DEFAULT FALSE,    -- si el email ha sido verificado
+    verification_token TEXT,              -- token único de verificación
+    verification_expires TIMESTAMP,       -- expiración del token
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+);
