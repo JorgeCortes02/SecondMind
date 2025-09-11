@@ -5,7 +5,7 @@ const pool = require("./db");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
