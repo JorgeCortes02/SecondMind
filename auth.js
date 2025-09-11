@@ -92,7 +92,7 @@ router.post("/register", async (req, res) => {
       },
     });
 
-    const verifyUrl = `https://secondmind-h6hv.onrender.com/auth/verify?token=${verificationToken}`;
+    const verifyUrl = `https://secondmind-h6hv.onrender.com/verify?token=${verificationToken}`;
 
    
 
