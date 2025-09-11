@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
-
+const router = express.Router();
 
 
 router.get("/verify", async (req, res) => {
@@ -32,3 +32,5 @@ router.get("/verify", async (req, res) => {
     res.status(500).send("Error interno");
   }
 });
+
+module.exports = router;
