@@ -33,11 +33,13 @@ router.post("/google", async (req, res) => {
     const email = payload["email"];
     const name = payload["name"];
 
+    
+
     const result = await pool.query(
       `INSERT INTO users (google_id, email, name)
        VALUES ($1, $2, $3)
        ON CONFLICT (google_id)
-       DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name, updated_at = NOW()
+       DO UPDATE SET  name = EXCLUDED.name, updated_at = NOW()
        RETURNING id`,
       [googleId, email, name]
     );
