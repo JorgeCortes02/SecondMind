@@ -153,6 +153,10 @@ router.post("/login", async (req, res) => {
     return res.status(401).json({ error: "Credenciales inválidas" });
   }
 
+
+
+
+  
   const user = result.rows[0];
 
   if (!user.is_verified) {
