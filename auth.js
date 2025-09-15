@@ -50,7 +50,7 @@ router.post("/google", async (req, res) => {
       expiresIn: "7d",
     });
 
-    res.json({ token, user: { id : userId,  email: email, name: name } });
+    res.json({ token, user: { id : googleId,  email: email, name: name, service : "googleLogin"} });
   } catch (error) {
     console.error("❌ Error auth Google:", error);
     res.status(401).json({ error: "Token inválido" });
@@ -172,6 +172,6 @@ router.post("/login", async (req, res) => {
     expiresIn: "7d",
   });
 
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, service : "SecondLogin" } });
 });
 module.exports = router;
