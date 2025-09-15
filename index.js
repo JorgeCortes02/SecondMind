@@ -16,28 +16,16 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/verificationMail", verifyMail);
 
-/* ============================================================
-   PROJECTS
-============================================================ */
 app.get("/projects", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM projects WHERE user_id=$1 ORDER BY id DESC",
+      `SELECT external_id, title, description_project, status, user_id, last_opened_date
+       FROM projects
+       WHERE user_id=$1
+       ORDER BY id DESC`,
       [req.user.userId]
     );
     res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/projects/:id", requireAuth, async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM projects WHERE id=$1 AND user_id=$2",
-      [req.params.id, req.user.userId]
-    );
-    res.json(result.rows[0] || null);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -47,35 +35,12 @@ app.post("/projects", requireAuth, async (req, res) => {
   const { title, description_project, status = "on" } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO projects (title, description_project, status, user_id) VALUES ($1,$2,$3,$4) RETURNING *",
+      `INSERT INTO projects (title, description_project, status, user_id)
+       VALUES ($1,$2,$3,$4)
+       RETURNING external_id, title, description_project, status, user_id, last_opened_date`,
       [title, description_project, status, req.user.userId]
     );
     res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put("/projects/:id", requireAuth, async (req, res) => {
-  const { title, description_project, status } = req.body;
-  try {
-    const result = await pool.query(
-      "UPDATE projects SET title=$1, description_project=$2, status=$3, last_opened_date=NOW() WHERE id=$4 AND user_id=$5 RETURNING *",
-      [title, description_project, status, req.params.id, req.user.userId]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete("/projects/:id", requireAuth, async (req, res) => {
-  try {
-    await pool.query("DELETE FROM projects WHERE id=$1 AND user_id=$2", [
-      req.params.id,
-      req.user.userId,
-    ]);
-    res.json({ message: "Proyecto eliminado" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,7 +52,10 @@ app.delete("/projects/:id", requireAuth, async (req, res) => {
 app.get("/events", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM events WHERE user_id=$1 ORDER BY id DESC",
+      `SELECT external_id, title, end_date, status, description_event, project_id, user_id
+       FROM events
+       WHERE user_id=$1
+       ORDER BY id DESC`,
       [req.user.userId]
     );
     res.json(result.rows);
@@ -100,7 +68,9 @@ app.post("/events", requireAuth, async (req, res) => {
   const { title, end_date, status = "on", description_event, project_id } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO events (title, end_date, status, description_event, project_id, user_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+      `INSERT INTO events (title, end_date, status, description_event, project_id, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING external_id, title, end_date, status, description_event, project_id, user_id`,
       [title, end_date, status, description_event, project_id, req.user.userId]
     );
     res.json(result.rows[0]);
@@ -115,7 +85,10 @@ app.post("/events", requireAuth, async (req, res) => {
 app.get("/tasks", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM task_items WHERE user_id=$1 ORDER BY id DESC",
+      `SELECT external_id, title, end_date, complete_date, status, description_task, project_id, event_id, user_id
+       FROM task_items
+       WHERE user_id=$1
+       ORDER BY id DESC`,
       [req.user.userId]
     );
     res.json(result.rows);
@@ -128,7 +101,9 @@ app.post("/tasks", requireAuth, async (req, res) => {
   const { title, end_date, complete_date, status = "on", description_task, project_id, event_id } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO task_items (title, end_date, complete_date, status, description_task, project_id, event_id, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+      `INSERT INTO task_items (title, end_date, complete_date, status, description_task, project_id, event_id, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       RETURNING external_id, title, end_date, complete_date, status, description_task, project_id, event_id, user_id`,
       [title, end_date, complete_date, status, description_task, project_id, event_id, req.user.userId]
     );
     res.json(result.rows[0]);
@@ -143,7 +118,10 @@ app.post("/tasks", requireAuth, async (req, res) => {
 app.get("/notes", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM notes WHERE user_id=$1 ORDER BY id DESC",
+      `SELECT external_id, title, content, event_id, user_id
+       FROM notes
+       WHERE user_id=$1
+       ORDER BY id DESC`,
       [req.user.userId]
     );
     res.json(result.rows);
@@ -156,7 +134,9 @@ app.post("/notes", requireAuth, async (req, res) => {
   const { title, content, event_id } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO notes (title, content, event_id, user_id) VALUES ($1,$2,$3,$4) RETURNING *",
+      `INSERT INTO notes (title, content, event_id, user_id)
+       VALUES ($1,$2,$3,$4)
+       RETURNING external_id, title, content, event_id, user_id`,
       [title, content, event_id, req.user.userId]
     );
     res.json(result.rows[0]);
@@ -171,7 +151,10 @@ app.post("/notes", requireAuth, async (req, res) => {
 app.get("/documents", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM uploaded_documents WHERE user_id=$1 ORDER BY id DESC",
+      `SELECT external_id, title, local_url, event_id, user_id
+       FROM uploaded_documents
+       WHERE user_id=$1
+       ORDER BY id DESC`,
       [req.user.userId]
     );
     res.json(result.rows);
@@ -184,22 +167,12 @@ app.post("/documents", requireAuth, async (req, res) => {
   const { title, local_url, event_id } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO uploaded_documents (title, local_url, event_id, user_id) VALUES ($1,$2,$3,$4) RETURNING *",
+      `INSERT INTO uploaded_documents (title, local_url, event_id, user_id)
+       VALUES ($1,$2,$3,$4)
+       RETURNING external_id, title, local_url, event_id, user_id`,
       [title, local_url, event_id, req.user.userId]
     );
     res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete("/documents/:id", requireAuth, async (req, res) => {
-  try {
-    await pool.query("DELETE FROM uploaded_documents WHERE id=$1 AND user_id=$2", [
-      req.params.id,
-      req.user.userId,
-    ]);
-    res.json({ message: "Documento eliminado" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
