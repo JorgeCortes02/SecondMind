@@ -7,7 +7,7 @@ const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-
+const { requireAuth } = require("./authMiddleware");
 
 
 const transporter = nodemailer.createTransport({
