@@ -174,4 +174,93 @@ router.post("/login", async (req, res) => {
 
   res.json({ token, user: { id: user.id, email: user.email, name: user.name, service : "SecondLogin" } });
 });
+
+router.put("/update-profile", requireAuth, async (req, res) => {
+  const { name, email } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: "El nombre es obligatorio" });
+  }
+
+  try {
+    let query, values;
+
+    if (email && email.trim() !== "") {
+      // actualizar nombre + email
+      query = `
+        UPDATE users
+        SET name = $1, email = $2, updated_at = NOW()
+        WHERE id = $3
+        RETURNING id, name, email
+      `;
+      values = [name, email, req.user.userId];
+    } else {
+      // actualizar solo nombre
+      query = `
+        UPDATE users
+        SET name = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, name, email
+      `;
+      values = [name, req.user.userId];
+    }
+
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ message: "Perfil actualizado ✅", user: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error en /update-profile:", err);
+    res.status(500).json({ error: "Error interno" });
+  }
+});
+
+/**
+ * 🔹 PUT /change-password
+ * Cambia la contraseña del usuario autenticado
+ */
+router.put("/change-password", requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Ambas contraseñas son obligatorias" });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT password_hash FROM users WHERE id = $1`,
+      [req.user.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    const user = result.rows[0];
+
+    // Verificar contraseña actual
+    const match = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: "La contraseña actual es incorrecta ❌" });
+    }
+
+    // Hashear nueva contraseña
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+      [newHash, req.user.userId]
+    );
+
+    res.json({ message: "Contraseña actualizada con éxito 🔑" });
+  } catch (err) {
+    console.error("❌ Error en /change-password:", err);
+    res.status(500).json({ error: "Error interno" });
+  }
+});
+
+
+
 module.exports = router;
