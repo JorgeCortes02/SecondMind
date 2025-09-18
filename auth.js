@@ -178,7 +178,7 @@ router.post("/login", async (req, res) => {
 router.put("/update-profile", requireAuth, async (req, res) => {
   const { name, email } = req.body;
 
-  if (!name) {
+  if (!name || name.trim() === "") {
     return res.status(400).json({ error: "El nombre es obligatorio" });
   }
 
@@ -186,46 +186,43 @@ router.put("/update-profile", requireAuth, async (req, res) => {
     let query, values;
 
     if (email && email.trim() !== "") {
-      // actualizar nombre + email
       query = `
         UPDATE users
         SET name = $1, email = $2, updated_at = NOW()
         WHERE id = $3
-        RETURNING id, name, email
       `;
       values = [name, email, req.user.userId];
     } else {
-      // actualizar solo nombre
       query = `
         UPDATE users
         SET name = $1, updated_at = NOW()
         WHERE id = $2
-        RETURNING id, name, email
       `;
       values = [name, req.user.userId];
     }
 
     const result = await pool.query(query, values);
-    if (result.rows.length === 0) {
+
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json({ message: "Perfil actualizado ✅", user: result.rows[0] });
+    // ✅ Solo confirmamos la operación
+    res.sendStatus(200); // 200 OK sin body
   } catch (err) {
     console.error("❌ Error en /update-profile:", err);
     res.status(500).json({ error: "Error interno" });
   }
 });
-
 /**
  * 🔹 PUT /change-password
  * Cambia la contraseña del usuario autenticado
  */
-router.put("/change-password", requireAuth, async (req, res) => {
+rrouter.put("/change-password", requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: "Ambas contraseñas son obligatorias" });
+    return res.sendStatus(400);
   }
 
   try {
@@ -235,32 +232,26 @@ router.put("/change-password", requireAuth, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+      return res.sendStatus(404);
     }
 
     const user = result.rows[0];
-
-    // Verificar contraseña actual
     const match = await bcrypt.compare(currentPassword, user.password_hash);
     if (!match) {
-      return res.status(401).json({ error: "La contraseña actual es incorrecta ❌" });
+      return res.sendStatus(401);
     }
 
-    // Hashear nueva contraseña
     const newHash = await bcrypt.hash(newPassword, 10);
-
     await pool.query(
       `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
       [newHash, req.user.userId]
     );
 
-    res.json({ message: "Contraseña actualizada con éxito 🔑" });
+    res.sendStatus(200); // ✅ éxito sin JSON
   } catch (err) {
     console.error("❌ Error en /change-password:", err);
-    res.status(500).json({ error: "Error interno" });
+    res.sendStatus(500);
   }
 });
-
-
 
 module.exports = router;
