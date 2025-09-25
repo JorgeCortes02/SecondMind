@@ -64,7 +64,7 @@ router.post("/send", requireAuth, async (req, res) => {
       </body>
       `,
     });
-
+ console.log("Enviado pixa");
     res.json({ message: "✅ Recordatorio enviado correctamente" });
   } catch (err) {
     console.error("❌ Error en /reminder/send:", err);
