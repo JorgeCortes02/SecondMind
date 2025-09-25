@@ -14,12 +14,14 @@ router.post("/send", requireAuth, async (req, res) => {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail", // ⚡ o SMTP de tu hosting
+      service: "gmail", 
+      port : 587,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
       },
     });
+
 
     await transporter.sendMail({
       from: '"SecondMind" <no-reply@secondmind.com>',
