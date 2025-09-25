@@ -5,7 +5,7 @@ const authRoutes = require("./auth");
 const verifyMail = require("./verificationMail");
 const { requireAuth } = require("./authMiddleware");
 const pool = require("./db");
-const reminderRoutes = require("./routes/sendReminder"); // 👈 importamos la nueva ruta
+const reminderRoutes = require("./sendEventNotification");
 
 const app = express();
 const port = process.env.PORT || 3000;
