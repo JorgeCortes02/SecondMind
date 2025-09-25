@@ -90,6 +90,7 @@ router.post("/register", async (req, res) => {
     // enviar email
     const transporter = nodemailer.createTransport({
       service: "gmail", // o SMTP de tu hosting
+      port: 587,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
