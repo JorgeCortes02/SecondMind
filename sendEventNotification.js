@@ -1,8 +1,11 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
 const { requireAuth } = require("./authMiddleware");
+const sgMail = require("@sendgrid/mail");
 
 const router = express.Router();
+
+// Configurar SendGrid con la API Key de tu .env
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Proteger la ruta con requireAuth
 router.post("/send", requireAuth, async (req, res) => {
@@ -13,19 +16,9 @@ router.post("/send", requireAuth, async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail", 
-      port : 587,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
-
-
-    await transporter.sendMail({
-      from: '"SecondMind" <no-reply@secondmind.com>',
+    await sgMail.send({
       to: email,
+      from: "secondmindmail@gmail.com", // 👈 Usa aquí el mismo correo verificado en SendGrid
       subject: `⏰ Recordatorio: ${event.title}`,
       html: `
       <body style="margin:0;padding:0;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f0f8ff, #dce6ff, #fadcf0); padding:40px;">
@@ -66,10 +59,16 @@ router.post("/send", requireAuth, async (req, res) => {
       </body>
       `,
     });
- console.log("Enviado pixa");
+
+    console.log("✅ Email enviado con SendGrid");
     res.json({ message: "✅ Recordatorio enviado correctamente" });
   } catch (err) {
     console.error("❌ Error en /reminder/send:", err);
+
+    if (err.response && err.response.body) {
+      console.error("📩 Detalle de SendGrid:", JSON.stringify(err.response.body, null, 2));
+    }
+
     res.status(500).json({ error: "Error al enviar el recordatorio" });
   }
 });
