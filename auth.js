@@ -102,7 +102,7 @@ router.post("/register", async (req, res) => {
    
 
 await transporter.sendMail({
-  from: '"SecondMind" <no-reply@secondmind.com>',
+  from: `"SecondMind" <${process.env.MAIL_USER}>`,
   to: email,
   subject: "Verifica tu cuenta en SecondMind 🚀",
   html: `
