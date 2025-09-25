@@ -5,7 +5,6 @@ const authRoutes = require("./auth");
 const verifyMail = require("./verificationMail");
 const { requireAuth } = require("./authMiddleware");
 const pool = require("./db");
-const reminderRoutes = require("./sendEventNotification");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,12 +16,6 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/verificationMail", verifyMail);
 
-// Rutas protegidas
-app.use("/reminder", reminderRoutes);
-
-/* ============================================================
-   PROJECTS
-============================================================ */
 app.get("/projects", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
