@@ -83,7 +83,7 @@ router.post("/register", async (req, res) => {
     // ✅ enviar email con SendGrid
     const msg = {
       to: email,
-      from: process.env.SENDGRID_FROM, // 👈 correo verificado en SendGrid
+      from: "seconmindmail@gmail.com", // 👈 correo verificado en SendGrid
       subject: "Verifica tu cuenta en SecondMind 🚀",
       html: `
         <body style="margin:0;padding:0;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f0f8ff, #dce6ff, #fadcf0); padding:40px;">
