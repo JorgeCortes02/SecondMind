@@ -18,7 +18,7 @@ router.post("/send", requireAuth, async (req, res) => {
   try {
     await sgMail.send({
       to: email,
-      from: "secondmindmail@gmail.com", // 👈 Usa aquí el mismo correo verificado en SendGrid
+      from: "seconmindmail@gmail.com", // 👈 Usa aquí el mismo correo verificado en SendGrid
       subject: `⏰ Recordatorio: ${event.title}`,
       html: `
       <body style="margin:0;padding:0;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f0f8ff, #dce6ff, #fadcf0); padding:40px;">
