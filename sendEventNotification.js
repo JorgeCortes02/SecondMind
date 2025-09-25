@@ -1,6 +1,6 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
-const { requireAuth } = require("../authMiddleware"); // 👈 importas tu middleware
+const { requireAuth } = require("./authMiddleware");
 
 const router = express.Router();
 
