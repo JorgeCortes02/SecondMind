@@ -218,7 +218,7 @@ router.put("/update-profile", requireAuth, async (req, res) => {
  * 🔹 PUT /change-password
  * Cambia la contraseña del usuario autenticado
  */
-rrouter.put("/change-password", requireAuth, async (req, res) => {
+router.put("/change-password", requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
