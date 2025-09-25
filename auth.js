@@ -110,6 +110,10 @@ router.post("/register", async (req, res) => {
     res.json({ message: "Cuenta creada, revisa tu correo para verificarla ✉️" });
   } catch (err) {
     console.error("❌ Error en /register:", err);
+
+if (err.response && err.response.body) {
+  console.error("📩 Detalle de SendGrid:", JSON.stringify(err.response.body, null, 2));
+}
     res.status(500).json({ error: "Error interno" });
   }
 });
