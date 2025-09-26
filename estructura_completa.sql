@@ -66,14 +66,15 @@ CREATE TABLE public.events (
     description_event text,
     project_id integer,
     user_id bigint,
-    external_id uuid DEFAULT gen_random_uuid()
+    external_id uuid DEFAULT gen_random_uuid(),
+
+    -- 🔹 Nuevas columnas añadidas
+    address text,
+    latitude double precision,
+    longitude double precision
 );
 
-
---
--- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
+-- Secuencia para IDs
 CREATE SEQUENCE public.events_id_seq
     AS integer
     START WITH 1
@@ -82,14 +83,23 @@ CREATE SEQUENCE public.events_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
---
--- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
 ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
 
+ALTER TABLE ONLY public.events
+    ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
 
+-- 🔹 Claves primarias y foráneas
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_external_id_key UNIQUE (external_id);
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 --
 -- Name: last_delete_task; Type: TABLE; Schema: public; Owner: -
 --
@@ -124,14 +134,28 @@ ALTER SEQUENCE public.last_delete_task_id_seq OWNED BY public.last_delete_task.i
 -- Name: notes; Type: TABLE; Schema: public; Owner: -
 --
 
+DROP TABLE IF EXISTS public.notes CASCADE;
+
 CREATE TABLE public.notes (
-    id integer NOT NULL,
-    title character varying(255) NOT NULL,
-    content text NOT NULL,
-    event_id integer,
-    user_id bigint,
-    external_id uuid DEFAULT gen_random_uuid()
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    event_id INTEGER REFERENCES public.events(id) ON DELETE SET NULL,
+    user_id BIGINT REFERENCES public.users(id) ON DELETE CASCADE,
+    external_id UUID DEFAULT gen_random_uuid() UNIQUE,
+
+    -- 🔹 Campos añadidos para que coincida con SwiftData
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL,
+    is_favorite BOOLEAN DEFAULT false NOT NULL,
+    is_archived BOOLEAN DEFAULT false NOT NULL
 );
+
+
+
+
+
+
 
 
 --
