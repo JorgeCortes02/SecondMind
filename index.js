@@ -39,13 +39,17 @@ app.get("/projects", requireAuth, async (req, res) => {
 });
 
 app.post("/projects", requireAuth, async (req, res) => {
-  const { title, description_project, status = "on" } = req.body;
+  const { external_id, title, description_project, status = "on" } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO projects (title, description_project, status, user_id)
-       VALUES ($1,$2,$3,$4)
+      `INSERT INTO projects (external_id, title, description_project, status, user_id)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (external_id) DO UPDATE SET
+         title=EXCLUDED.title,
+         description_project=EXCLUDED.description_project,
+         status=EXCLUDED.status
        RETURNING external_id, title, description_project, status, last_opened_date`,
-      [title, description_project, status, req.user.userId]
+      [external_id, title, description_project, status, req.user.userId]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -60,7 +64,8 @@ app.get("/events", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT external_id, title, end_date, status, description_event,
-              project_external_id, address, latitude, longitude
+              address, latitude, longitude,
+              (SELECT external_id FROM projects WHERE id=events.project_id) AS project_external_id
        FROM events
        WHERE user_id=$1
        ORDER BY id DESC`,
@@ -88,9 +93,11 @@ app.post("/events", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO events (external_id, title, end_date, status, description_event, project_id, user_id, address, latitude, longitude)
-       VALUES ($1,$2,$3,$4,$5,
-               (SELECT id FROM projects WHERE external_id=$6 AND user_id=$10),
-               $7,$8,$9,$10)
+       VALUES (
+         $1, $2, $3, $4, $5,
+         (SELECT id FROM projects WHERE external_id=$6 AND user_id=$7),
+         $7, $8, $9, $10
+       )
        ON CONFLICT (external_id) DO UPDATE SET
          title=EXCLUDED.title,
          end_date=EXCLUDED.end_date,
@@ -100,7 +107,8 @@ app.post("/events", requireAuth, async (req, res) => {
          address=EXCLUDED.address,
          latitude=EXCLUDED.latitude,
          longitude=EXCLUDED.longitude
-       RETURNING external_id, title, end_date, status, description_event, project_id, address, latitude, longitude`,
+       RETURNING external_id, title, end_date, status, description_event, address, latitude, longitude,
+                 (SELECT external_id FROM projects WHERE id=events.project_id) AS project_external_id`,
       [
         external_id,
         title,
@@ -111,8 +119,7 @@ app.post("/events", requireAuth, async (req, res) => {
         req.user.userId,
         address,
         latitude,
-        longitude,
-        req.user.userId
+        longitude
       ]
     );
 
@@ -128,7 +135,9 @@ app.post("/events", requireAuth, async (req, res) => {
 app.get("/tasks", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT external_id, title, end_date, complete_date, status, description_task, project_id, event_id
+      `SELECT external_id, title, end_date, complete_date, status, description_task,
+              (SELECT external_id FROM projects WHERE id=task_items.project_id) AS project_external_id,
+              (SELECT external_id FROM events WHERE id=task_items.event_id) AS event_external_id
        FROM task_items
        WHERE user_id=$1
        ORDER BY id DESC`,
@@ -141,13 +150,48 @@ app.get("/tasks", requireAuth, async (req, res) => {
 });
 
 app.post("/tasks", requireAuth, async (req, res) => {
-  const { title, end_date, complete_date, status = "on", description_task, project_id, event_id } = req.body;
+  const {
+    external_id,
+    title,
+    end_date,
+    complete_date,
+    status = "on",
+    description_task,
+    project_external_id,
+    event_external_id
+  } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO task_items (title, end_date, complete_date, status, description_task, project_id, event_id, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-       RETURNING external_id, title, end_date, complete_date, status, description_task, project_id, event_id`,
-      [title, end_date, complete_date, status, description_task, project_id, event_id, req.user.userId]
+      `INSERT INTO task_items (external_id, title, end_date, complete_date, status, description_task, project_id, event_id, user_id)
+       VALUES (
+         $1,$2,$3,$4,$5,$6,
+         (SELECT id FROM projects WHERE external_id=$7 AND user_id=$10),
+         (SELECT id FROM events WHERE external_id=$8 AND user_id=$10),
+         $9
+       )
+       ON CONFLICT (external_id) DO UPDATE SET
+         title=EXCLUDED.title,
+         end_date=EXCLUDED.end_date,
+         complete_date=EXCLUDED.complete_date,
+         status=EXCLUDED.status,
+         description_task=EXCLUDED.description_task,
+         project_id=EXCLUDED.project_id,
+         event_id=EXCLUDED.event_id
+       RETURNING external_id, title, end_date, complete_date, status, description_task,
+                 (SELECT external_id FROM projects WHERE id=task_items.project_id) AS project_external_id,
+                 (SELECT external_id FROM events WHERE id=task_items.event_id) AS event_external_id`,
+      [
+        external_id,
+        title,
+        end_date,
+        complete_date,
+        status,
+        description_task,
+        project_external_id,
+        event_external_id,
+        req.user.userId,
+        req.user.userId
+      ]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -161,7 +205,10 @@ app.post("/tasks", requireAuth, async (req, res) => {
 app.get("/notes", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT external_id, title, content, event_id
+      `SELECT external_id, title, content,
+              (SELECT external_id FROM events WHERE id=notes.event_id) AS event_external_id,
+              (SELECT external_id FROM projects WHERE id=notes.project_id) AS project_external_id,
+              created_at, updated_at, is_favorite, is_archived
        FROM notes
        WHERE user_id=$1
        ORDER BY id DESC`,
@@ -174,13 +221,52 @@ app.get("/notes", requireAuth, async (req, res) => {
 });
 
 app.post("/notes", requireAuth, async (req, res) => {
-  const { title, content, event_id } = req.body;
+  const {
+    external_id,
+    title,
+    content,
+    project_external_id,
+    event_external_id,
+    created_at,
+    updated_at,
+    is_favorite,
+    is_archived
+  } = req.body;
+
   try {
     const result = await pool.query(
-      `INSERT INTO notes (title, content, event_id, user_id)
-       VALUES ($1,$2,$3,$4)
-       RETURNING external_id, title, content, event_id`,
-      [title, content, event_id, req.user.userId]
+      `INSERT INTO notes (external_id, title, content, project_id, event_id, user_id, created_at, updated_at, is_favorite, is_archived)
+       VALUES (
+         $1,$2,$3,
+         (SELECT id FROM projects WHERE external_id=$4 AND user_id=$9),
+         (SELECT id FROM events WHERE external_id=$5 AND user_id=$9),
+         $9,$6,$7,$8,$10
+       )
+       ON CONFLICT (external_id) DO UPDATE SET
+         title=EXCLUDED.title,
+         content=EXCLUDED.content,
+         project_id=EXCLUDED.project_id,
+         event_id=EXCLUDED.event_id,
+         created_at=EXCLUDED.created_at,
+         updated_at=EXCLUDED.updated_at,
+         is_favorite=EXCLUDED.is_favorite,
+         is_archived=EXCLUDED.is_archived
+       RETURNING external_id, title, content, created_at, updated_at, is_favorite, is_archived,
+                 (SELECT external_id FROM projects WHERE id=notes.project_id) AS project_external_id,
+                 (SELECT external_id FROM events WHERE id=notes.event_id) AS event_external_id`,
+      [
+        external_id,
+        title,
+        content,
+        project_external_id,
+        event_external_id,
+        created_at,
+        updated_at,
+        is_favorite,
+        is_archived,
+        req.user.userId,
+        is_archived
+      ]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -194,7 +280,9 @@ app.post("/notes", requireAuth, async (req, res) => {
 app.get("/documents", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT external_id, title, local_url, event_id
+      `SELECT external_id, title, local_url,
+              (SELECT external_id FROM events WHERE id=uploaded_documents.event_id) AS event_external_id,
+              upload_date
        FROM uploaded_documents
        WHERE user_id=$1
        ORDER BY id DESC`,
@@ -207,13 +295,23 @@ app.get("/documents", requireAuth, async (req, res) => {
 });
 
 app.post("/documents", requireAuth, async (req, res) => {
-  const { title, local_url, event_id } = req.body;
+  const { external_id, title, local_url, event_external_id } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO uploaded_documents (title, local_url, event_id, user_id)
-       VALUES ($1,$2,$3,$4)
-       RETURNING external_id, title, local_url, event_id`,
-      [title, local_url, event_id, req.user.userId]
+      `INSERT INTO uploaded_documents (external_id, title, local_url, event_id, user_id)
+       VALUES (
+         $1,$2,$3,
+         (SELECT id FROM events WHERE external_id=$4 AND user_id=$5),
+         $5
+       )
+       ON CONFLICT (external_id) DO UPDATE SET
+         title=EXCLUDED.title,
+         local_url=EXCLUDED.local_url,
+         event_id=EXCLUDED.event_id
+       RETURNING external_id, title, local_url,
+                 (SELECT external_id FROM events WHERE id=uploaded_documents.event_id) AS event_external_id,
+                 upload_date`,
+      [external_id, title, local_url, event_external_id, req.user.userId]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -231,6 +329,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`✅ API escuchando en puerto ${port}`);
 });
-
-
-
