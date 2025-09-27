@@ -25,6 +25,7 @@ app.use("/reminder", reminderRoutes);
 ============================================================ */
 app.get("/projects", requireAuth, async (req, res) => {
   try {
+    console.log("📥 GET /projects | user:", req.user.userId);
     const result = await pool.query(
       `SELECT external_id, title, description_project, status, last_opened_date
        FROM projects
@@ -32,13 +33,16 @@ app.get("/projects", requireAuth, async (req, res) => {
        ORDER BY id DESC`,
       [req.user.userId]
     );
+    console.log("✅ Projects encontrados:", result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error("❌ Error en GET /projects:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/projects", requireAuth, async (req, res) => {
+  console.log("📥 POST /projects | body:", req.body, "user:", req.user.userId);
   const { external_id, title, description_project, status = "on" } = req.body;
   try {
     await pool.query(
@@ -50,8 +54,10 @@ app.post("/projects", requireAuth, async (req, res) => {
          status=EXCLUDED.status`,
       [external_id, title, description_project, status, req.user.userId]
     );
+    console.log("✅ Project guardado:", external_id);
     res.sendStatus(200);
   } catch (err) {
+    console.error("❌ Error en POST /projects:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -61,6 +67,7 @@ app.post("/projects", requireAuth, async (req, res) => {
 ============================================================ */
 app.get("/events", requireAuth, async (req, res) => {
   try {
+    console.log("📥 GET /events | user:", req.user.userId);
     const result = await pool.query(
       `SELECT external_id, title, end_date, status, description_event,
               address, latitude, longitude,
@@ -70,13 +77,16 @@ app.get("/events", requireAuth, async (req, res) => {
        ORDER BY id DESC`,
       [req.user.userId]
     );
+    console.log("✅ Events encontrados:", result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error("❌ Error en GET /events:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/events", requireAuth, async (req, res) => {
+  console.log("📥 POST /events | body:", req.body, "user:", req.user.userId);
   const {
     external_id,
     title,
@@ -107,20 +117,15 @@ app.post("/events", requireAuth, async (req, res) => {
          latitude=EXCLUDED.latitude,
          longitude=EXCLUDED.longitude`,
       [
-        external_id,       // $1
-        title,             // $2
-        end_date,          // $3
-        status,            // $4
-        description_event, // $5
-        project_external_id, // $6
-        req.user.userId,   // $7
-        address,           // $8
-        latitude,          // $9
-        longitude          // $10
+        external_id, title, end_date, status, description_event,
+        project_external_id, req.user.userId,
+        address, latitude, longitude
       ]
     );
+    console.log("✅ Event guardado:", external_id);
     res.sendStatus(200);
   } catch (err) {
+    console.error("❌ Error en POST /events:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -130,6 +135,7 @@ app.post("/events", requireAuth, async (req, res) => {
 ============================================================ */
 app.get("/tasks", requireAuth, async (req, res) => {
   try {
+    console.log("📥 GET /tasks | user:", req.user.userId);
     const result = await pool.query(
       `SELECT external_id, title, end_date, complete_date, status, description_task,
               (SELECT external_id FROM projects WHERE id=task_items.project_id) AS project_external_id,
@@ -139,13 +145,16 @@ app.get("/tasks", requireAuth, async (req, res) => {
        ORDER BY id DESC`,
       [req.user.userId]
     );
+    console.log("✅ Tasks encontrados:", result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error("❌ Error en GET /tasks:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/tasks", requireAuth, async (req, res) => {
+  console.log("📥 POST /tasks | body:", req.body, "user:", req.user.userId);
   const {
     external_id,
     title,
@@ -174,19 +183,15 @@ app.post("/tasks", requireAuth, async (req, res) => {
          project_id=EXCLUDED.project_id,
          event_id=EXCLUDED.event_id`,
       [
-        external_id,       // $1
-        title,             // $2
-        end_date,          // $3
-        complete_date,     // $4
-        status,            // $5
-        description_task,  // $6
-        project_external_id, // $7
-        event_external_id,   // $8
-        req.user.userId    // $9
+        external_id, title, end_date, complete_date, status,
+        description_task, project_external_id,
+        event_external_id, req.user.userId
       ]
     );
+    console.log("✅ Task guardado:", external_id);
     res.sendStatus(200);
   } catch (err) {
+    console.error("❌ Error en POST /tasks:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -196,6 +201,7 @@ app.post("/tasks", requireAuth, async (req, res) => {
 ============================================================ */
 app.get("/notes", requireAuth, async (req, res) => {
   try {
+    console.log("📥 GET /notes | user:", req.user.userId);
     const result = await pool.query(
       `SELECT external_id, title, content,
               (SELECT external_id FROM events WHERE id=notes.event_id) AS event_external_id,
@@ -206,13 +212,16 @@ app.get("/notes", requireAuth, async (req, res) => {
        ORDER BY id DESC`,
       [req.user.userId]
     );
+    console.log("✅ Notes encontrados:", result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error("❌ Error en GET /notes:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/notes", requireAuth, async (req, res) => {
+  console.log("📥 POST /notes | body:", req.body, "user:", req.user.userId);
   const {
     external_id,
     title,
@@ -244,20 +253,15 @@ app.post("/notes", requireAuth, async (req, res) => {
          is_favorite=EXCLUDED.is_favorite,
          is_archived=EXCLUDED.is_archived`,
       [
-        external_id,       // $1
-        title,             // $2
-        content,           // $3
-        project_external_id, // $4
-        event_external_id,   // $5
-        created_at,        // $6
-        updated_at,        // $7
-        is_favorite,       // $8
-        req.user.userId,   // $9
-        is_archived        // $10
+        external_id, title, content, project_external_id,
+        event_external_id, created_at, updated_at,
+        is_favorite, req.user.userId, is_archived
       ]
     );
+    console.log("✅ Note guardada:", external_id);
     res.sendStatus(200);
   } catch (err) {
+    console.error("❌ Error en POST /notes:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -267,6 +271,7 @@ app.post("/notes", requireAuth, async (req, res) => {
 ============================================================ */
 app.get("/documents", requireAuth, async (req, res) => {
   try {
+    console.log("📥 GET /documents | user:", req.user.userId);
     const result = await pool.query(
       `SELECT external_id, title, local_url,
               (SELECT external_id FROM events WHERE id=uploaded_documents.event_id) AS event_external_id,
@@ -276,13 +281,16 @@ app.get("/documents", requireAuth, async (req, res) => {
        ORDER BY id DESC`,
       [req.user.userId]
     );
+    console.log("✅ Documents encontrados:", result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error("❌ Error en GET /documents:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/documents", requireAuth, async (req, res) => {
+  console.log("📥 POST /documents | body:", req.body, "user:", req.user.userId);
   const { external_id, title, local_url, event_external_id } = req.body;
   try {
     await pool.query(
@@ -296,16 +304,12 @@ app.post("/documents", requireAuth, async (req, res) => {
          title=EXCLUDED.title,
          local_url=EXCLUDED.local_url,
          event_id=EXCLUDED.event_id`,
-      [
-        external_id,   // $1
-        title,         // $2
-        local_url,     // $3
-        event_external_id, // $4
-        req.user.userId    // $5
-      ]
+      [external_id, title, local_url, event_external_id, req.user.userId]
     );
+    console.log("✅ Document guardado:", external_id);
     res.sendStatus(200);
   } catch (err) {
+    console.error("❌ Error en POST /documents:", err);
     res.status(500).json({ error: err.message });
   }
 });
