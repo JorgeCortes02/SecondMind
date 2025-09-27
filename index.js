@@ -107,16 +107,16 @@ app.post("/events", requireAuth, async (req, res) => {
          latitude=EXCLUDED.latitude,
          longitude=EXCLUDED.longitude`,
       [
-        external_id,
-        title,
-        end_date,
-        status,
-        description_event,
-        project_external_id,
-        req.user.userId,
-        address,
-        latitude,
-        longitude
+        external_id,       // $1
+        title,             // $2
+        end_date,          // $3
+        status,            // $4
+        description_event, // $5
+        project_external_id, // $6
+        req.user.userId,   // $7
+        address,           // $8
+        latitude,          // $9
+        longitude          // $10
       ]
     );
     res.sendStatus(200);
@@ -174,15 +174,15 @@ app.post("/tasks", requireAuth, async (req, res) => {
          project_id=EXCLUDED.project_id,
          event_id=EXCLUDED.event_id`,
       [
-        external_id,
-        title,
-        end_date,
-        complete_date,
-        status,
-        description_task,
-        project_external_id,
-        event_external_id,
-        req.user.userId
+        external_id,       // $1
+        title,             // $2
+        end_date,          // $3
+        complete_date,     // $4
+        status,            // $5
+        description_task,  // $6
+        project_external_id, // $7
+        event_external_id,   // $8
+        req.user.userId    // $9
       ]
     );
     res.sendStatus(200);
@@ -244,17 +244,16 @@ app.post("/notes", requireAuth, async (req, res) => {
          is_favorite=EXCLUDED.is_favorite,
          is_archived=EXCLUDED.is_archived`,
       [
-        external_id,
-        title,
-        content,
-        project_external_id,
-        event_external_id,
-        created_at,
-        updated_at,
-        is_favorite,
-        is_archived,
-        req.user.userId,
-        is_archived
+        external_id,       // $1
+        title,             // $2
+        content,           // $3
+        project_external_id, // $4
+        event_external_id,   // $5
+        created_at,        // $6
+        updated_at,        // $7
+        is_favorite,       // $8
+        req.user.userId,   // $9
+        is_archived        // $10
       ]
     );
     res.sendStatus(200);
@@ -297,7 +296,13 @@ app.post("/documents", requireAuth, async (req, res) => {
          title=EXCLUDED.title,
          local_url=EXCLUDED.local_url,
          event_id=EXCLUDED.event_id`,
-      [external_id, title, local_url, event_external_id, req.user.userId]
+      [
+        external_id,   // $1
+        title,         // $2
+        local_url,     // $3
+        event_external_id, // $4
+        req.user.userId    // $5
+      ]
     );
     res.sendStatus(200);
   } catch (err) {
