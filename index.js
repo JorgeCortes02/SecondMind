@@ -313,7 +313,135 @@ app.post("/documents", requireAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+/* ============================================================
+   DELETE PROJECT
+============================================================ */
+app.delete("/projects/:external_id", requireAuth, async (req, res) => {
+  console.log("🗑️ DELETE /projects | external_id:", req.params.external_id, "user:", req.user.userId);
+  try {
+    const result = await pool.query(
+      `DELETE FROM projects
+       WHERE external_id=$1 AND user_id=$2
+       RETURNING external_id`,
+      [req.params.external_id, req.user.userId]
+    );
 
+    if (result.rowCount === 0) {
+      console.warn("⚠️ Proyecto no encontrado o no pertenece al usuario");
+      return res.status(404).json({ error: "Proyecto no encontrado" });
+    }
+
+    console.log("✅ Project eliminado:", req.params.external_id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error en DELETE /projects:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   DELETE EVENT
+============================================================ */
+app.delete("/events/:external_id", requireAuth, async (req, res) => {
+  console.log("🗑️ DELETE /events | external_id:", req.params.external_id, "user:", req.user.userId);
+  try {
+    const result = await pool.query(
+      `DELETE FROM events
+       WHERE external_id=$1 AND user_id=$2
+       RETURNING external_id`,
+      [req.params.external_id, req.user.userId]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("⚠️ Evento no encontrado o no pertenece al usuario");
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    console.log("✅ Event eliminado:", req.params.external_id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error en DELETE /events:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   DELETE TASK
+============================================================ */
+app.delete("/tasks/:external_id", requireAuth, async (req, res) => {
+  console.log("🗑️ DELETE /tasks | external_id:", req.params.external_id, "user:", req.user.userId);
+  try {
+    const result = await pool.query(
+      `DELETE FROM task_items
+       WHERE external_id=$1 AND user_id=$2
+       RETURNING external_id`,
+      [req.params.external_id, req.user.userId]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("⚠️ Tarea no encontrada o no pertenece al usuario");
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+
+    console.log("✅ Task eliminada:", req.params.external_id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error en DELETE /tasks:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   DELETE NOTE
+============================================================ */
+app.delete("/notes/:external_id", requireAuth, async (req, res) => {
+  console.log("🗑️ DELETE /notes | external_id:", req.params.external_id, "user:", req.user.userId);
+  try {
+    const result = await pool.query(
+      `DELETE FROM notes
+       WHERE external_id=$1 AND user_id=$2
+       RETURNING external_id`,
+      [req.params.external_id, req.user.userId]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("⚠️ Nota no encontrada o no pertenece al usuario");
+      return res.status(404).json({ error: "Nota no encontrada" });
+    }
+
+    console.log("✅ Note eliminada:", req.params.external_id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error en DELETE /notes:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   DELETE DOCUMENT
+============================================================ */
+app.delete("/documents/:external_id", requireAuth, async (req, res) => {
+  console.log("🗑️ DELETE /documents | external_id:", req.params.external_id, "user:", req.user.userId);
+  try {
+    const result = await pool.query(
+      `DELETE FROM uploaded_documents
+       WHERE external_id=$1 AND user_id=$2
+       RETURNING external_id`,
+      [req.params.external_id, req.user.userId]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("⚠️ Documento no encontrado o no pertenece al usuario");
+      return res.status(404).json({ error: "Documento no encontrado" });
+    }
+
+    console.log("✅ Document eliminado:", req.params.external_id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error en DELETE /documents:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 /* ============================================================
    SERVER
 ============================================================ */
