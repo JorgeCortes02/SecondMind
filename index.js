@@ -30,7 +30,7 @@ app.get("/projects", requireAuth, async (req, res) => {
        FROM projects
        WHERE user_id=$1
        ORDER BY id DESC`,
-      [req.user.userId]
+      [req.user.userId] // ← lo sacamos del token
     );
     res.json(result.rows);
   } catch (err) {
@@ -49,7 +49,7 @@ app.post("/projects", requireAuth, async (req, res) => {
          description_project=EXCLUDED.description_project,
          status=EXCLUDED.status
        RETURNING external_id, title, description_project, status, last_opened_date`,
-      [external_id, title, description_project, status, req.user.userId]
+      [external_id, title, description_project, status, req.user.userId] // ← aquí también del token
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -116,7 +116,7 @@ app.post("/events", requireAuth, async (req, res) => {
         status,
         description_event,
         project_external_id,
-        req.user.userId,
+        req.user.userId, // ← solo del token
         address,
         latitude,
         longitude
@@ -165,8 +165,8 @@ app.post("/tasks", requireAuth, async (req, res) => {
       `INSERT INTO task_items (external_id, title, end_date, complete_date, status, description_task, project_id, event_id, user_id)
        VALUES (
          $1,$2,$3,$4,$5,$6,
-         (SELECT id FROM projects WHERE external_id=$7 AND user_id=$10),
-         (SELECT id FROM events WHERE external_id=$8 AND user_id=$10),
+         (SELECT id FROM projects WHERE external_id=$7 AND user_id=$9),
+         (SELECT id FROM events WHERE external_id=$8 AND user_id=$9),
          $9
        )
        ON CONFLICT (external_id) DO UPDATE SET
@@ -189,8 +189,7 @@ app.post("/tasks", requireAuth, async (req, res) => {
         description_task,
         project_external_id,
         event_external_id,
-        req.user.userId,
-        req.user.userId
+        req.user.userId // ← solo token
       ]
     );
     res.json(result.rows[0]);
@@ -264,7 +263,7 @@ app.post("/notes", requireAuth, async (req, res) => {
         updated_at,
         is_favorite,
         is_archived,
-        req.user.userId,
+        req.user.userId, // ← solo token
         is_archived
       ]
     );
@@ -311,7 +310,7 @@ app.post("/documents", requireAuth, async (req, res) => {
        RETURNING external_id, title, local_url,
                  (SELECT external_id FROM events WHERE id=uploaded_documents.event_id) AS event_external_id,
                  upload_date`,
-      [external_id, title, local_url, event_external_id, req.user.userId]
+      [external_id, title, local_url, event_external_id, req.user.userId] // ← solo token
     );
     res.json(result.rows[0]);
   } catch (err) {
