@@ -30,7 +30,7 @@ app.get("/projects", requireAuth, async (req, res) => {
        FROM projects
        WHERE user_id=$1
        ORDER BY id DESC`,
-      [req.user.userId] // ← lo sacamos del token
+      [req.user.userId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -41,17 +41,16 @@ app.get("/projects", requireAuth, async (req, res) => {
 app.post("/projects", requireAuth, async (req, res) => {
   const { external_id, title, description_project, status = "on" } = req.body;
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO projects (external_id, title, description_project, status, user_id)
        VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (external_id) DO UPDATE SET
          title=EXCLUDED.title,
          description_project=EXCLUDED.description_project,
-         status=EXCLUDED.status
-       RETURNING external_id, title, description_project, status, last_opened_date`,
-      [external_id, title, description_project, status, req.user.userId] // ← aquí también del token
+         status=EXCLUDED.status`,
+      [external_id, title, description_project, status, req.user.userId]
     );
-    res.json(result.rows[0]);
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -91,7 +90,7 @@ app.post("/events", requireAuth, async (req, res) => {
   } = req.body;
 
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO events (external_id, title, end_date, status, description_event, project_id, user_id, address, latitude, longitude)
        VALUES (
          $1, $2, $3, $4, $5,
@@ -106,9 +105,7 @@ app.post("/events", requireAuth, async (req, res) => {
          project_id=EXCLUDED.project_id,
          address=EXCLUDED.address,
          latitude=EXCLUDED.latitude,
-         longitude=EXCLUDED.longitude
-       RETURNING external_id, title, end_date, status, description_event, address, latitude, longitude,
-                 (SELECT external_id FROM projects WHERE id=events.project_id) AS project_external_id`,
+         longitude=EXCLUDED.longitude`,
       [
         external_id,
         title,
@@ -116,14 +113,13 @@ app.post("/events", requireAuth, async (req, res) => {
         status,
         description_event,
         project_external_id,
-        req.user.userId, // ← solo del token
+        req.user.userId,
         address,
         latitude,
         longitude
       ]
     );
-
-    res.json(result.rows[0]);
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -161,7 +157,7 @@ app.post("/tasks", requireAuth, async (req, res) => {
     event_external_id
   } = req.body;
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO task_items (external_id, title, end_date, complete_date, status, description_task, project_id, event_id, user_id)
        VALUES (
          $1,$2,$3,$4,$5,$6,
@@ -176,10 +172,7 @@ app.post("/tasks", requireAuth, async (req, res) => {
          status=EXCLUDED.status,
          description_task=EXCLUDED.description_task,
          project_id=EXCLUDED.project_id,
-         event_id=EXCLUDED.event_id
-       RETURNING external_id, title, end_date, complete_date, status, description_task,
-                 (SELECT external_id FROM projects WHERE id=task_items.project_id) AS project_external_id,
-                 (SELECT external_id FROM events WHERE id=task_items.event_id) AS event_external_id`,
+         event_id=EXCLUDED.event_id`,
       [
         external_id,
         title,
@@ -189,10 +182,10 @@ app.post("/tasks", requireAuth, async (req, res) => {
         description_task,
         project_external_id,
         event_external_id,
-        req.user.userId // ← solo token
+        req.user.userId
       ]
     );
-    res.json(result.rows[0]);
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -233,7 +226,7 @@ app.post("/notes", requireAuth, async (req, res) => {
   } = req.body;
 
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO notes (external_id, title, content, project_id, event_id, user_id, created_at, updated_at, is_favorite, is_archived)
        VALUES (
          $1,$2,$3,
@@ -249,10 +242,7 @@ app.post("/notes", requireAuth, async (req, res) => {
          created_at=EXCLUDED.created_at,
          updated_at=EXCLUDED.updated_at,
          is_favorite=EXCLUDED.is_favorite,
-         is_archived=EXCLUDED.is_archived
-       RETURNING external_id, title, content, created_at, updated_at, is_favorite, is_archived,
-                 (SELECT external_id FROM projects WHERE id=notes.project_id) AS project_external_id,
-                 (SELECT external_id FROM events WHERE id=notes.event_id) AS event_external_id`,
+         is_archived=EXCLUDED.is_archived`,
       [
         external_id,
         title,
@@ -263,11 +253,11 @@ app.post("/notes", requireAuth, async (req, res) => {
         updated_at,
         is_favorite,
         is_archived,
-        req.user.userId, // ← solo token
+        req.user.userId,
         is_archived
       ]
     );
-    res.json(result.rows[0]);
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -296,7 +286,7 @@ app.get("/documents", requireAuth, async (req, res) => {
 app.post("/documents", requireAuth, async (req, res) => {
   const { external_id, title, local_url, event_external_id } = req.body;
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO uploaded_documents (external_id, title, local_url, event_id, user_id)
        VALUES (
          $1,$2,$3,
@@ -306,13 +296,10 @@ app.post("/documents", requireAuth, async (req, res) => {
        ON CONFLICT (external_id) DO UPDATE SET
          title=EXCLUDED.title,
          local_url=EXCLUDED.local_url,
-         event_id=EXCLUDED.event_id
-       RETURNING external_id, title, local_url,
-                 (SELECT external_id FROM events WHERE id=uploaded_documents.event_id) AS event_external_id,
-                 upload_date`,
-      [external_id, title, local_url, event_external_id, req.user.userId] // ← solo token
+         event_id=EXCLUDED.event_id`,
+      [external_id, title, local_url, event_external_id, req.user.userId]
     );
-    res.json(result.rows[0]);
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
