@@ -2,38 +2,22 @@ const express = require("express");
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const router = express.Router();
 
-// 👉 Sustituye esto con tu propia API key de RapidAPI (no se caduca fácilmente)
-const RAPID_API_KEY = process.env.RAPID_API_KEY;
-
-router.post("/", async (req, res) => {
-  const { text } = req.body;
-
-  if (!text || text.trim() === "") {
-    return res.status(400).json({ error: "No se proporcionó texto para resumir" });
-  }
-
+// Ruta para obtener una cita aleatoria
+router.get("/", async (req, res) => {
   try {
-    const response = await fetch("https://twinword-text-summarization-v1.p.rapidapi.com/summarize/", {
-      method: "POST",
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": RAPID_API_KEY,
-        "X-RapidAPI-Host": "twinword-text-summarization-v1.p.rapidapi.com"
-      },
-      body: new URLSearchParams({ text })
-    });
-
+    const response = await fetch("https://api.quotable.io/random");
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("⚠️ Error de API:", data);
-      return res.status(500).json({ error: data.message || "Error de API" });
+      return res.status(500).json({ error: "Error al obtener cita" });
     }
 
-    const summary = data.summary || "No se pudo generar el resumen.";
-    res.json({ summary });
+    res.json({
+      quote: data.content,
+      author: data.author
+    });
   } catch (error) {
-    console.error("❌ Error interno:", error);
+    console.error("❌ Error al obtener cita:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
