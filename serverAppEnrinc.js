@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6", {
+    const response = await fetch("https://api-inference.huggingface.co/models/facebook/bart-large-cnn", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${HF_API_KEY}`,
