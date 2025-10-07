@@ -6,7 +6,7 @@ const verifyMail = require("./verificationMail");
 const { requireAuth } = require("./authMiddleware");
 const pool = require("./db");
 const reminderRoutes = require("./sendEventNotification");
-const summarizerRoute = require("./serverAppEnrinc");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -19,7 +19,7 @@ app.use("/verificationMail", verifyMail);
 
 // Rutas protegidas
 app.use("/reminder", reminderRoutes);
-app.use("/api/summarize", summarizerRoute);
+
 /* ============================================================
    PROJECTS
 ============================================================ */
